@@ -1,9 +1,17 @@
-all: Transition.cpp  Game.cpp Graph.cpp  main.cpp
+# BOOST_INC: path to Boost headers.
+# Leave empty on Linux (apt-installed Boost is on the system path).
+# On macOS: make BOOST_INC=$(brew --prefix boost)/include
+BOOST_INC ?=
 
-	g++ -o3 -march=native -std=c++11 Transition.cpp  Game.cpp  Graph.cpp  main.cpp -w -o game
+CXXFLAGS := -O3 -march=native -std=c++11
+ifneq ($(BOOST_INC),)
+	CXXFLAGS += -I$(BOOST_INC)
+endif
 
-T1: Transition.cpp  Graph.cpp  main.cpp
+SRCS := Transition.cpp Game.cpp Graph.cpp main.cpp
 
-	g++ -o3 -march=native -std=c++11 Transition.cpp   Graph.cpp  main.cpp -w -o game
+all: $(SRCS)
+	g++ $(CXXFLAGS) $(SRCS) -w -o game
 
-
+clean:
+	rm -f game

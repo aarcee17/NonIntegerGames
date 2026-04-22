@@ -15,6 +15,7 @@ static struct opt_t
   int playerid = 0;
   int early_termination = false;
   bool print_all_winning = false;
+  bool heuristic = false;
   
 }* opt;
 
@@ -42,7 +43,7 @@ void print_usage(){
   cout << " -id " << " <int>             player id. can be 0 or 1. Default is 0." << endl;
   cout << " -f  " << " <filename>        filename specifying the game graph" << endl;
   cout << " -et " << "                   early termination if initial state is winning. Default is False" << endl;
-  cout << " -ws " << "                   prints all winning states. Disables early termination" << endl;;
+  cout << " -hq " << "                   heuristic priority-guided construction + interleaved ET. Default is False" << endl;;
 }
 
 
@@ -141,6 +142,10 @@ void parse_opt(int argc, char** argv){
       opt->early_termination = false;
       continue;
     }
+    if (s == "-hq"){
+      opt->heuristic = true;
+      continue;
+    }
     else{
       cout << "Error in input options" << endl;
       print_usage();
@@ -169,25 +174,44 @@ int  main(int argc, char** argv){
   //create and solve reachability game
 
   clock_t creategraph_s = clock();
-  Game* qg = new Game(gg, opt->df, opt->precision, opt->thresh, opt->relation);
+  Game* qg;
+  if (opt->heuristic) {
+    qg = new Game(gg, opt->df, opt->precision, opt->thresh, opt->relation,
+                  true, opt->playerid);
+  } else {
+    qg = new Game(gg, opt->df, opt->precision, opt->thresh, opt->relation);
+  }
   clock_t creategraph_e = clock();
   double creategraph = ((double) (creategraph_e- creategraph_s)) / CLOCKS_PER_SEC;
   cout << "Game creation     : " <<  creategraph << " seconds" << endl;
 
-  //qg->printAll();
-  //qg->printRevTrans();
+  bool playerwins = false;
+  double playgame = 0.0;
 
-  clock_t playgame_s = clock();
-  bool playerwins = qg->reachabilitygame(opt->playerid, opt->early_termination);
-  clock_t playgame_e = clock();
-  double playgame = ((double) (playgame_e- playgame_s)) / CLOCKS_PER_SEC;
-  
-  cout << " " << endl;
-  cout << "Input quant. game : " << gg->getStateNum() << " states " << endl;
-  cout << "Reachability game : " << qg->getallstates() << " states " << endl;
-  cout << "Game creation     : " <<  creategraph << " seconds" << endl;
-  cout << "Game play         : " <<  playgame << " seconds" << endl;
-  cout << " " << endl;
+  if (opt->heuristic && qg->getConstructionET()) {
+    // ET was triggered during construction — no need to solve separately
+    playerwins = true;
+    cout << " " << endl;
+    cout << "Input quant. game : " << gg->getStateNum() << " states " << endl;
+    cout << "Reachability game : " << qg->getallstates() << " states (ET at " << qg->getStatesAtET() << ")" << endl;
+    cout << "States@first win  : " << qg->getStatesAtFirstWin() << " / " << qg->getallstates() << endl;
+    cout << "Game creation     : " <<  creategraph << " seconds (includes ET)" << endl;
+    cout << "Game play         : 0 seconds (solved during construction)" << endl;
+    cout << " " << endl;
+  } else {
+    clock_t playgame_s = clock();
+    playerwins = qg->reachabilitygame(opt->playerid, opt->early_termination);
+    clock_t playgame_e = clock();
+    playgame = ((double) (playgame_e- playgame_s)) / CLOCKS_PER_SEC;
+
+    cout << " " << endl;
+    cout << "Input quant. game : " << gg->getStateNum() << " states " << endl;
+    cout << "Reachability game : " << qg->getallstates() << " states " << endl;
+    cout << "States@first win  : " << qg->getStatesAtFirstWin() << " / " << qg->getallstates() << endl;
+    cout << "Game creation     : " <<  creategraph << " seconds" << endl;
+    cout << "Game play         : " <<  playgame << " seconds" << endl;
+    cout << " " << endl;
+  }
     
   if (!playerwins){
     cout << "Player " << opt->playerid << " does not win" <<  endl;
@@ -196,7 +220,6 @@ int  main(int argc, char** argv){
     cout << "Player " << opt->playerid << " wins " <<  endl;
     if (opt->synthesis){
       qg->rawprint(opt->playerid);
-
     }
   }
 

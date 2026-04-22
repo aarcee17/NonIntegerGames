@@ -1,2 +1,6 @@
 src/game
 __pycache__/
+*.txt~
+*.pyc
+*.o
+*.out

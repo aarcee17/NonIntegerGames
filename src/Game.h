@@ -18,7 +18,10 @@ class Game{
 
  public:
   Game();
+  // Original constructor (BFS construction)
   Game(Graph* gg, int df, int precision, int threshold, string relation);
+  // Heuristic constructor (priority-guided construction + interleaved solving)
+  Game(Graph* gg, int df, int precision, int threshold, string relation, bool use_heuristic, int playerid);
   virtual ~Game();
 
   //playing game
@@ -37,6 +40,9 @@ class Game{
   unordered_map<string, vector<string>>* getTrans();
   unordered_map<string, vector<string>>* getRevTrans();
   int getallstates();
+  int getStatesAtFirstWin();      // states constructed when first winning state found
+  int getStatesAtET();            // states constructed when early termination triggered
+  bool getConstructionET();       // whether ET was triggered during construction
   
   //Print functions
   void printInitial();
@@ -55,6 +61,10 @@ class Game{
   unordered_map<string, vector<string>> transFunc;
   unordered_map<string, vector<string>> reverseFunc;
   int allstates;
+  // Instrumentation fields
+  int states_at_first_win;   // how many states built when first winning state found
+  int states_at_et;          // how many states built when ET triggered (heuristic mode)
+  bool construction_et;      // true if construction stopped early due to ET
 };
 
 
