@@ -25,6 +25,8 @@ class Graph{
   int getInitial();
   int getStateNum();
   int getWt();
+  int getMaxPosWt();
+  int getMaxNegWt();
   unordered_map<int, int>* getStateToPlayer();
   unordered_map<int, vector< Transition*>>* getTrans();
   unordered_map<int, bool>* getReachability();
@@ -46,6 +48,8 @@ class Graph{
   int numState;
   int initState;
   int maxWt;
+  int maxPosWt;
+  int maxNegWt;
   unordered_map<int, int> stateToPlayer;
   unordered_map<int, vector<Transition*>> transFunc;
   unordered_map<int, bool> reach_objective;
